@@ -1,1 +1,3 @@
-print("Welcome to Project AURA!")
+from tools.browser import search_google 
+
+search_google("Agentic AI")
