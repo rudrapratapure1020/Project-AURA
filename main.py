@@ -1,3 +1,5 @@
-from tools.browser import search_google 
+from core.router import handle_command
 
-search_google("Agentic AI")
+command = input("AURA > ")
+
+handle_command(command)
