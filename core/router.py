@@ -2,6 +2,7 @@ from tools.browser import search_google
 from tools.app_launcher import open_app
 from tools.keyboard_tool import type_text
 from tools.mouse_tool import move_mouse, left_click, right_click, double_click
+from tools.clipboard_tool import copy_text, get_clipboard, paste_text
 
 def handle_command(command):
     print("DEBUG Command:", command)
@@ -41,5 +42,17 @@ def handle_command(command):
         except (ValueError, IndexError):
             print("Sorry, please provide valid mouse coordinates.")
 
+    elif command.lower().startswith("copy "):
+        text = command[5:].strip()
+        copy_text(text)
+        print("Text copied to clipboard.")
+
+    elif command.lower() == "paste":
+        paste_text()
+
+    elif command.lower() == "read clipboard":
+        text = get_clipboard()
+        print(f"Clipboard: {text}")
+ 
     else:
         print("Sorry, I don't know that command yet.")
