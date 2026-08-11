@@ -4,7 +4,7 @@ from tools.keyboard_tool import type_text
 from tools.mouse_tool import move_mouse, left_click, right_click, double_click
 from tools.clipboard_tool import copy_text, get_clipboard, paste_text
 from tools.screenshot_tool import take_screenshot
-from tools.window_tool import close_window
+from tools.window_tool import close_window, close_app
 
 def handle_command(command):
     print("DEBUG Command:", command)
@@ -59,6 +59,17 @@ def handle_command(command):
     elif command.lower() == "screenshot":
         take_screenshot("screenshot.png")
         print("Screenshot saved as screenshot.png")
+
+    elif command.lower().startswith("close "):
+        app_name = command[6:].strip()
+
+        if app_name == "window":
+            close_window()
+        else:
+            if close_app(app_name):
+                print(f"{app_name} closed successfully.")
+            else:
+                print(f"I couldn't find '{app_name}'.")
 
     elif command.lower() == "close window":
         close_window()
