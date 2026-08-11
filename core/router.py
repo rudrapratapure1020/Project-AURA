@@ -4,6 +4,7 @@ from tools.keyboard_tool import type_text
 from tools.mouse_tool import move_mouse, left_click, right_click, double_click
 from tools.clipboard_tool import copy_text, get_clipboard, paste_text
 from tools.screenshot_tool import take_screenshot
+from tools.window_tool import close_window
 
 def handle_command(command):
     print("DEBUG Command:", command)
@@ -58,6 +59,9 @@ def handle_command(command):
     elif command.lower() == "screenshot":
         take_screenshot("screenshot.png")
         print("Screenshot saved as screenshot.png")
- 
+
+    elif command.lower() == "close window":
+        close_window()
+
     else:
         print("Sorry, I don't know that command yet.")
