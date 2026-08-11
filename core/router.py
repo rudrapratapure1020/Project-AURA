@@ -3,6 +3,7 @@ from tools.app_launcher import open_app
 from tools.keyboard_tool import type_text
 from tools.mouse_tool import move_mouse, left_click, right_click, double_click
 from tools.clipboard_tool import copy_text, get_clipboard, paste_text
+from tools.screenshot_tool import take_screenshot
 
 def handle_command(command):
     print("DEBUG Command:", command)
@@ -53,6 +54,10 @@ def handle_command(command):
     elif command.lower() == "read clipboard":
         text = get_clipboard()
         print(f"Clipboard: {text}")
+
+    elif command.lower() == "screenshot":
+        take_screenshot("screenshot.png")
+        print("Screenshot saved as screenshot.png")
  
     else:
         print("Sorry, I don't know that command yet.")
