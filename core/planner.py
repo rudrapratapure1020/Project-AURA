@@ -4,7 +4,20 @@ from core.command_normalizer import normalize
 def create_plan(command):
     command = command.strip()
 
-    parts = command.split(" and ")
+    separators = [
+        " and ",
+        " then ",
+    ]
+
+    parts = [command]
+
+    for separator in separators:
+        new_parts = []
+
+        for part in parts:
+            new_parts.extend(part.split(separator))
+
+        parts = new_parts
 
     plan = []
 
