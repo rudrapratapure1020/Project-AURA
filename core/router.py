@@ -1,12 +1,16 @@
 from core.command_normalizer import normalize
 from core.brain import understand
 from core.command_registry import find_command
-
+from core.agent import run_agent
 
 def handle_command(command):
     command = command.strip()
 
     print("DEBUG Command:", command)
+
+    if " and " in command.lower():
+        run_agent(command)
+        return
 
     normalized_command = normalize(command)
 

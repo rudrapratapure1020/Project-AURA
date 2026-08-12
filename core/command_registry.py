@@ -17,7 +17,7 @@ def handle_close_app(command):
 
 def handle_open(command):
     app_name = command[5:].strip()
-    open_app(app_name)
+    return open_app(app_name)
 
 def handle_search(command):
     query = command[7:].strip()
