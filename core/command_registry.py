@@ -6,6 +6,7 @@ from tools.keyboard_tool import type_text
 from tools.browser import search_google
 from tools.app_launcher import open_app
 from tools.window_tool import close_window, close_app
+from core.observer import observe_app
 
 def handle_close_app(command):
     app_name = command[6:].strip()
@@ -17,7 +18,13 @@ def handle_close_app(command):
 
 def handle_open(command):
     app_name = command[5:].strip()
-    return open_app(app_name)
+
+    success = open_app(app_name)
+
+    if not success:
+        return False
+
+    return observe_app(app_name)
 
 def handle_search(command):
     query = command[7:].strip()

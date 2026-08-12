@@ -16,4 +16,17 @@ def close_app(app_name):
         return True
 
     return False
+
+def is_app_open(app_name):
+    app_name = app_name.lower().strip()
+
+    windows = gw.getAllWindows()
+
+    for window in windows:
+        title = window.title.lower().strip()
+
+        if app_name in title:
+            return True
+
+    return False
             
