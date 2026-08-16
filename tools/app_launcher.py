@@ -27,29 +27,9 @@ def open_app(app_name):
             print(f"Sorry, I don't know how to open '{app_name}' yet.")
             return False
 
-    print(f"DEBUG: Found application shortcut: {shortcut}")
-    import os
-    os.startfile(shortcut)
+        print(f"DEBUG: Found application shortcut: {shortcut}")
 
-    # Give Windows time to create the window.
-    time.sleep(1)
+        import os
+        os.startfile(shortcut)
 
-    # Try to find and activate the newly opened application.
-    for _ in range(5):
-        windows = gw.getAllWindows()
-
-        for window in windows:
-            title = window.title.lower()
-
-            if app_name in title:
-                try:
-                    window.activate()
-                    print(f"DEBUG: {app_name} window activated.")
-                    return True
-                except Exception:
-                    pass
-
-        time.sleep(1)
-
-    print(f"DEBUG: {app_name} opened, but I couldn't activate its window.")
     return True
