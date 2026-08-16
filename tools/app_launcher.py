@@ -10,11 +10,19 @@ apps = {
     "paint": "mspaint"
 }
 
+APP_ALIASES = {
+    "calc": "calculator",
+    "chrome browser": "chrome",
+    "google chrome": "chrome",
+    "notepad app": "notepad",
+}
+
 
 def open_app(app_name):
     print(f"DEBUG: app_name = '{app_name}'")
 
     app_name = app_name.lower().strip()
+    app_name = APP_ALIASES.get(app_name, app_name)
 
     if app_name in apps:
         print(f"DEBUG: Opening {apps[app_name]}")
