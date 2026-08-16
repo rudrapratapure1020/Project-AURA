@@ -1,23 +1,75 @@
 from core.command_normalizer import normalize
 
 
-def create_plan(command):
+COMMAND_STARTS = (
+    "open ",
+    "launch ",
+    "start ",
+    "type ",
+    "write ",
+    "enter ",
+    "search ",
+    "look up ",
+    "find ",
+    "copy ",
+    "paste",
+    "screenshot",
+    "take a screenshot",
+    "capture screen",
+    "left click",
+    "right click",
+    "double click",
+    "move mouse ",
+    "close ",
+    "close window",
+    "read clipboard",
+)
+
+
+def is_command_start(text):
+    text = text.strip().lower()
+
+    return text.startswith(COMMAND_STARTS)
+
+
+def split_command(command):
     command = command.strip()
 
-    separators = [
-        " and ",
-        " then ",
-    ]
+    # First split on "then" because it clearly indicates
+    # that another action follows.
+    parts = []
 
-    parts = [command]
+    for part in command.split(" then "):
+        part = part.strip()
 
-    for separator in separators:
-        new_parts = []
+        if not part:
+            continue
 
-        for part in parts:
-            new_parts.extend(part.split(separator))
+        # Only split "and" when the following text looks
+        # like another AURA command.
+        current = part
 
-        parts = new_parts
+        while " and " in current.lower():
+            lower_current = current.lower()
+            index = lower_current.find(" and ")
+
+            before = current[:index].strip()
+            after = current[index + 5:].strip()
+
+            if is_command_start(after):
+                parts.append(before)
+                current = after
+            else:
+                break
+
+        if current:
+            parts.append(current)
+
+    return parts
+
+
+def create_plan(command):
+    parts = split_command(command)
 
     plan = []
 
