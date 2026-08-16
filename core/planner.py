@@ -25,6 +25,8 @@ def create_plan(command):
         part = part.strip()
 
         if part:
+            part = part.rstrip(".,!?")
+
             normalized = normalize(part)
             plan.append(normalized)
 
