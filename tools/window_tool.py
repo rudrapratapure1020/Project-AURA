@@ -29,4 +29,24 @@ def is_app_open(app_name):
             return True
 
     return False
-            
+
+def find_app_window(app_name):
+    app_name = app_name.lower().strip()
+
+    windows = gw.getAllWindows()
+
+    for window in windows:
+        title = window.title.lower().strip()
+
+        if app_name in title:
+            return window
+
+    return None
+
+def activate_window(window):
+    try:
+        window.activate()
+        return True
+    except Exception as e:
+        print(f"Could not activate window: {e}")
+        return False
