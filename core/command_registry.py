@@ -32,7 +32,7 @@ def handle_search(command):
 
 def handle_type(command):
     text = command[5:].strip()
-    type_text(text)
+    return type_text(text)
 
 def handle_copy(command):
     text = command[5:].strip()
