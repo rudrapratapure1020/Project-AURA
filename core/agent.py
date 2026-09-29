@@ -1,65 +1,39 @@
-from core.brain import understand
-from core.executor import execute_tool
+from core.planner import create_plan
+from core.executor import execute
 from core.context import AuraContext
 
 
 def run_agent(command, dry_run=False):
-
     context = AuraContext()
 
-    print("\n==============================")
-    print("        AURA STARTED")
-    print("==============================")
+    print("\nAURA STARTED")
+    print(f"REQUEST: {command}\n")
 
-    print(f"\nREQUEST: {command}")
+    plan = create_plan(command, context)
 
-    print("\nTHINKING...")
-
-    plan = understand(command, context)
-
-    if not plan or "actions" not in plan:
+    if not plan:
         print("AURA could not create a plan.")
         return False
 
-    print("\nAI PLAN:")
+    print("PLAN:", plan)
 
-    for action in plan["actions"]:
-        print(
-            f"  → {action['tool']} "
-            f"{action.get('arguments', {})}"
-        )
-
-    for action in plan["actions"]:
-
-        tool_name = action.get("tool")
-        arguments = action.get("arguments", {})
-
-        print("\n--------------------------------")
-        print(f"TOOL: {tool_name}")
-        print(f"ARGUMENTS: {arguments}")
-        print("--------------------------------")
+    for step in plan:
+        print(f"\nSTEP: {step}")
 
         if dry_run:
-            print("DRY RUN: tool not executed.")
+            print("DRY RUN: not executing.")
             continue
 
-        result = execute_tool(
-            tool_name,
-            arguments,
-            context
-        )
+        print(f"EXECUTING: {step}")
 
-        print(f"RESULT: {result}")
+        success = execute(step, context)
 
-        if not result.get("success", False):
-            print("\nAURA stopped because the tool failed.")
+        if not success:
+            print("Agent stopped because a step failed.")
             context.show_state()
             return False
 
-    print("\n==============================")
-    print("       TASK COMPLETED")
-    print("==============================")
-
+    print("\nTASK COMPLETED")
     context.show_state()
 
     return True
