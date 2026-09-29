@@ -1,40 +1,57 @@
-from core.command_registry import find_command
+from core.command_registry import get_tool
 
 
-def execute(command, context=None):
-    handler, needs_command = find_command(command)
+def execute_tool(tool_name, arguments=None, context=None):
 
-    if not handler:
-        print(f"I don't know how to execute: {command}")
+    tool = get_tool(tool_name)
 
-        if context:
-            context.record_command(command, False)
+    if not tool:
+        print(f"Unknown AURA tool: {tool_name}")
+        return {
+            "success": False,
+            "message": f"Unknown tool: {tool_name}"
+        }
 
-        return False
+    function = tool["function"]
+    arguments = arguments or {}
 
     try:
-        if needs_command:
-            try:
-                result = handler(command, context)
-            except TypeError:
-                result = handler(command)
+        # Pass context only to tools that need it
+        if tool_name == "open_app":
+            result = function(
+                arguments.get("app_name", ""),
+                context
+            )
         else:
-            result = handler()
+            result = function(**arguments)
+
+        if result is None:
+            result = {
+                "success": True,
+                "message": f"{tool_name} completed"
+            }
+
+        if context:
+            context.record_command(
+                tool_name,
+                result
+            )
+
+        return result
 
     except Exception as e:
-        print(f"EXECUTION ERROR: {e}")
+
+        print(f"TOOL ERROR [{tool_name}]: {e}")
+
+        result = {
+            "success": False,
+            "message": str(e)
+        }
 
         if context:
-            context.record_command(command, False)
+            context.record_command(
+                tool_name,
+                result
+            )
 
-        return False
-
-    if result is False:
-        if context:
-            context.record_command(command, False)
-        return False
-
-    if context:
-        context.record_command(command, True)
-
-    return True
+        return result
