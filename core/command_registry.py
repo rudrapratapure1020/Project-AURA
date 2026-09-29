@@ -16,7 +16,7 @@ def handle_close_app(command):
     else:
         print(f"I couldn't find '{app_name}'.")
 
-def handle_open(command):
+def handle_open(command, context=None):
     app_name = command[5:].strip()
 
     success = open_app(app_name)
@@ -24,7 +24,15 @@ def handle_open(command):
     if not success:
         return False
 
-    return observe_app(app_name)
+    window = observe_app(app_name)
+
+    if not window:
+        return False
+
+    if context:
+        context.set_window(app_name, window)
+
+    return window
 
 def handle_search(command):
     query = command[7:].strip()

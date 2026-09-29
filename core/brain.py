@@ -1,83 +1,117 @@
-def understand(command):
-    command = command.strip()
-    lower_command = command.lower()
+import json
+from openai import OpenAI
 
-    if lower_command.startswith("open "):
-        return {
-            "intent": "open",
-            "command": command
+
+MODEL = "llama3.2:3b"
+
+client = OpenAI(
+    base_url="http://localhost:11434/v1/",
+    api_key="ollama",
+)
+
+
+SYSTEM_PROMPT = """
+You are AURA, a local AI desktop automation planner.
+
+Your job is to convert the user's natural-language request
+into a sequence of simple commands that AURA can execute.
+
+SUPPORTED COMMANDS:
+
+- open <application>
+- search <query>
+- type <text>
+- copy <text>
+- paste
+- move mouse <x> <y>
+- left click
+- right click
+- double click
+- screenshot
+- read clipboard
+- close <application>
+- close window
+
+RULES:
+
+1. Break complex requests into multiple actions.
+2. Keep actions in the correct order.
+3. Use ONLY the supported commands.
+4. Do not invent commands.
+5. Return ONLY valid JSON.
+6. The JSON must have this exact structure:
+
+{
+    "actions": [
+        {
+            "command": "..."
         }
+    ]
+}
+"""
 
-    if lower_command.startswith("search "):
-        return {
-            "intent": "search",
-            "command": command
-        }
 
-    if lower_command.startswith("type "):
-        return {
-            "intent": "type",
-            "command": command
-        }
+def understand(command, context=None):
 
-    if lower_command.startswith("copy "):
-        return {
-            "intent": "copy",
-            "command": command
-        }
+    # Get AURA's current state
+    context_info = ""
 
-    if lower_command.startswith("move mouse "):
-        return {
-            "intent": "move_mouse",
-            "command": command
-        }
+    if context:
+        state = context.get_state()
 
-    if lower_command == "paste":
-        return {
-            "intent": "paste",
-            "command": command
-        }
+        context_info = f"""
+CURRENT AURA STATE:
 
-    if lower_command == "screenshot":
-        return {
-            "intent": "screenshot",
-            "command": command
-        }
+Current application: {state["current_app"]}
+Current window: {state["current_window"]}
+Last command: {state["last_command"]}
+Last result: {state["last_result"]}
+History: {state["history"]}
+"""
 
-    if lower_command == "left click":
-        return {
-            "intent": "left_click",
-            "command": command
-        }
+    # Send both context + user request to the local LLM
+    user_message = f"""
+{context_info}
 
-    if lower_command == "right click":
-        return {
-            "intent": "right_click",
-            "command": command
-        }
+USER REQUEST:
+{command}
+"""
 
-    if lower_command == "double click":
-        return {
-            "intent": "double_click",
-            "command": command
-        }
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ],
+            temperature=0
+        )
 
-    if lower_command == "read clipboard":
-        return {
-            "intent": "read_clipboard",
-            "command": command
-        }
+        content = response.choices[0].message.content.strip()
 
-    if lower_command == "close window":
-        return {
-            "intent": "close_window",
-            "command": command
-        }
+        # Remove markdown code fences if the model adds them
+        if content.startswith("```"):
+            content = content.replace("```json", "")
+            content = content.replace("```", "")
+            content = content.strip()
 
-    if lower_command.startswith("close "):
-        return {
-            "intent": "close",
-            "command": command
-        }
+        # Extract JSON from the response
+        start = content.find("{")
+        end = content.rfind("}")
 
-    return None
+        if start == -1 or end == -1:
+            raise ValueError("No valid JSON found in model response")
+
+        content = content[start:end + 1]
+
+        return json.loads(content)
+
+    except Exception as e:
+        print(f"AURA local AI brain error: {e}")
+        return None
