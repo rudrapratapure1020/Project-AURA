@@ -115,7 +115,16 @@ def create_plan(command, context=None):
             plan.append(normalized)
 
         if plan:
-            return plan
+            valid_plan = []
+
+            for item in plan:
+                if item.startswith("search "):
+                    valid_plan.append(item)
+                elif item.startswith(("open ", "launch ", "start ", "type ", "press ")):
+                    valid_plan.append(item)
+
+        if valid_plan:
+            return valid_plan
 
     print("AI planning failed. Using fallback planner.")
 

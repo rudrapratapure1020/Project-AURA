@@ -32,6 +32,13 @@ SUPPORTED COMMANDS:
 - close <application>
 - close window
 
+IMPORTANT RULES:
+- Return ONLY valid JSON. Never include explanations or markdown.
+- For a search request, return exactly one action using:
+  "search <query>"
+- Do not split search into open Google, type, or press enter.
+- Use only commands supported by the application.
+
 RULES:
 
 1. Break complex requests into multiple actions.
@@ -94,23 +101,44 @@ USER REQUEST:
         )
 
         content = response.choices[0].message.content.strip()
+        print("\n--- RAW OLLAMA RESPONSE ---")
+        print(repr(content))
+        print("--- END RAW RESPONSE ---\n")
 
-        # Remove markdown code fences if the model adds them
-        if content.startswith("```"):
-            content = content.replace("```json", "")
-            content = content.replace("```", "")
-            content = content.strip()
+       
+        # Extract valid JSON objects from the model response
+        decoder = json.JSONDecoder()
+        candidates = []
 
-        # Extract JSON from the response
-        start = content.find("{")
-        end = content.rfind("}")
+        for index, char in enumerate(content):
+            if char == "{":
+                try:
+                    data, _ = decoder.raw_decode(content[index:])
 
-        if start == -1 or end == -1:
-            raise ValueError("No valid JSON found in model response")
+                    if (
+                        isinstance(data, dict)
+                        and isinstance(data.get("actions"), list)
+                    ):
+                        candidates.append(data)
 
-        content = content[start:end + 1]
+                except json.JSONDecodeError:
+                    continue
 
-        return json.loads(content)
+        if not candidates:
+            raise ValueError("No valid actions JSON found")
+
+        # Use the final valid actions object
+        data = candidates[-1]
+
+        for action in data["actions"]:
+            if (
+                not isinstance(action, dict)
+                or not isinstance(action.get("command"), str)
+            ):
+                raise ValueError("Invalid action format")
+
+        return data
+
 
     except Exception as e:
         print(f"AURA local AI brain error: {e}")

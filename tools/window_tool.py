@@ -5,7 +5,13 @@ import pyautogui
 import pygetwindow as gw
 
 def close_window():
-    pyautogui.hotkey("alt", "f4")
+    try:
+        pyautogui.hotkey("alt", "f4")
+        time.sleep(0.5)
+        return True
+    except Exception as e:
+        print(f"Could not close window: {e}")
+        return False
 
 
 def close_app(app_name):
@@ -32,18 +38,29 @@ def is_app_open(app_name):
 
     return False
 
+
 def find_app_window(app_name):
     app_name = app_name.lower().strip()
+
+    aliases = {
+        "notepad": ["notepad"],
+        "calculator": ["calculator"],
+        "paint": ["paint"],
+        "chrome": ["chrome"],
+    }
+
+    keywords = aliases.get(app_name, [app_name])
 
     windows = gw.getAllWindows()
 
     for window in windows:
         title = window.title.lower().strip()
 
-        if app_name in title:
+        if title and any(keyword in title for keyword in keywords):
             return window
 
     return None
+
 
 def activate_window(window):
     try:

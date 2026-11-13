@@ -1,35 +1,64 @@
+
 from core.command_normalizer import normalize
-from core.brain import understand
 from core.command_registry import find_command
 from core.agent import run_agent
+from core.executor import execute
+from core.planner import split_command
+from evaluation.task_evaluator import TaskEvaluator
+
 
 def handle_command(command):
     command = command.strip()
 
-    print("DEBUG Command:", command)
-
-    if " and " in command.lower():
-        run_agent(command)
+    if not command:
         return
 
-    normalized_command = normalize(command)
+    evaluator = TaskEvaluator()
+    start_time = evaluator.start_timer()
+    task_success = False
 
-    print("DEBUG Normalized:", normalized_command)
+    try:
+        print("DEBUG Command:", command)
 
-    understanding = understand(normalized_command)
+        commands = split_command(command)
 
-    if understanding is None:
-        print("Sorry, I don't know that command yet.")
-        return
+        if len(commands) > 1:
+            task_success = True
 
-    handler, needs_command = find_command(normalized_command)
+            for item in commands:
+                normalized = normalize(item)
+                print("DEBUG Step:", normalized)
 
-    if handler:
-        if needs_command:
-            handler(normalized_command)
+                handler, needs_command = find_command(normalized)
+
+                if handler:
+                    result = execute(normalized)
+                else:
+                    result = run_agent(normalized)
+
+                if result is False:
+                    task_success = False
+                    break
+
+            return task_success
+
+        normalized_command = normalize(command)
+
+        print("DEBUG Normalized:", normalized_command)
+
+        handler, needs_command = find_command(normalized_command)
+
+        if handler:
+            result = execute(normalized_command)
         else:
-            handler()
+            result = run_agent(normalized_command)
 
-        return
+        task_success = result is not False
+        return task_success
 
-    print("I understood the command, but I don't know how to execute it yet.")
+    finally:
+        evaluator.record_task(
+            command,
+            task_success,
+            start_time
+        )
