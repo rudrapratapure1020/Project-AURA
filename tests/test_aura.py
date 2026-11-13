@@ -195,3 +195,85 @@ class TestTaskMetrics(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestRouterIntegration(unittest.TestCase):
+
+    def setUp(self):
+        self.patches = [
+            patch("core.router.TaskEvaluator"),
+        ]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in reversed(self.patches):
+            p.stop()
+
+    @patch("core.router.run_agent")
+    @patch("core.router.execute")
+    @patch("core.router.find_command")
+    @patch("core.router.normalize", side_effect=lambda x: x)
+    @patch("core.router.split_command", return_value=["open notepad"])
+    def test_supported_command_flow(self, *mocks):
+        from core.router import handle_command
+
+        split, normalize, find, execute, agent = mocks
+        find.return_value = (object(), False)
+        execute.return_value = True
+
+        result = handle_command("open notepad")
+
+        self.assertTrue(result)
+        execute.assert_called_once_with("open notepad")
+        agent.assert_not_called()
+
+    @patch("core.router.run_agent", return_value=True)
+    @patch("core.router.execute")
+    @patch("core.router.find_command", return_value=(None, False))
+    @patch("core.router.normalize", side_effect=lambda x: x)
+    @patch("core.router.split_command", return_value=["do something"])
+    def test_unsupported_command_uses_agent(self, *mocks):
+        from core.router import handle_command
+
+        split, normalize, find, execute, agent = mocks
+
+        result = handle_command("do something")
+
+        self.assertTrue(result)
+        agent.assert_called_once_with("do something")
+        execute.assert_not_called()
+
+    @patch("core.router.run_agent")
+    @patch("core.router.execute", side_effect=[True, True])
+    @patch("core.router.find_command", side_effect=[(object(), False), (object(), False)])
+    @patch("core.router.normalize", side_effect=lambda x: x)
+    @patch(
+        "core.router.split_command",
+        return_value=["open notepad", "type hello"]
+    )
+    def test_multi_step_task_flow(self, *mocks):
+        from core.router import handle_command
+
+        result = handle_command("open notepad then type hello")
+
+        self.assertTrue(result)
+        self.assertEqual(mocks[3].call_count, 2)
+
+    @patch("core.router.run_agent")
+    @patch("core.router.execute", side_effect=[True, False])
+    @patch("core.router.find_command", return_value=(object(), False))
+    @patch("core.router.normalize", side_effect=lambda x: x)
+    @patch(
+        "core.router.split_command",
+        return_value=["open notepad", "type hello", "close window"]
+    )
+    def test_failed_step_stops_remaining_steps(self, *mocks):
+        from core.router import handle_command
+
+        result = handle_command(
+            "open notepad then type hello then close window"
+        )
+
+        self.assertFalse(result)
+        self.assertEqual(mocks[3].call_count, 2)
