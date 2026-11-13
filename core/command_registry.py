@@ -1,3 +1,4 @@
+import time
 from tools.clipboard_tool import copy_text, get_clipboard, paste_text
 from tools.mouse_tool import left_click, right_click, double_click
 from tools.mouse_tool import move_mouse
@@ -24,15 +25,17 @@ def handle_open(command, context=None):
     if not success:
         return False
 
+    time.sleep(1)
+
     window = observe_app(app_name)
 
-    if not window:
-        return False
-
-    if context:
+    if window and context:
         context.set_window(app_name, window)
 
-    return window
+    if not window:
+        print(f"Application launched, but window was not detected.")
+
+    return True
 
 def handle_search(command):
     query = command[7:].strip()

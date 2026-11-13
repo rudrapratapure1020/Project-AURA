@@ -1,0 +1,34 @@
+{
+    "date": "2026-11-13T14:49:08.398674",
+    "total_steps": 6,
+    "passed": 6,
+    "failed": 0,
+    "success_rate": 100.0,
+    "clipboard_verified": true,
+    "steps": [
+        {
+            "step": "Open Notepad",
+            "passed": true
+        },
+        {
+            "step": "Type text",
+            "passed": true
+        },
+        {
+            "step": "Copy text",
+            "passed": true
+        },
+        {
+            "step": "Verify clipboard",
+            "passed": true
+        },
+        {
+            "step": "Paste text",
+            "passed": true
+        },
+        {
+            "step": "Close Notepad",
+            "passed": true
+        }
+    ]
+}
